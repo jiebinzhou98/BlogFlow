@@ -1,0 +1,73 @@
+'use client'
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { supabase } from "@/lib/supabase"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+
+export default function LoginPage(){
+    const router = useRouter()
+    const [email, setEmail] = useState('')
+    const [password, setPassword] = useState('')
+    const [loading, setLoading] = useState(false)
+
+    const handleLogin = async () => {
+        setLoading(true)
+        const {error} = await supabase.auth.signInWithPassword({ email, password})
+
+        if(error){
+            alert(error.message)
+        }else{
+            router.push('dashboard')
+        }setLoading(false)
+    }
+
+    const handleGuestLogin = async () => {
+        setLoading(true)
+        const {error} = await supabase.auth.signInWithPassword({
+            email: 'guest@demo.com',
+            password: 'guest1234'
+        })
+
+        if(error){
+            alert(error.message)
+        }else{
+            router.push('/dashboard')
+        }setLoading(false)
+    }
+
+    return(
+        <main className="flex items-center justify-center min-h-screen">
+            <Card className="w-full max-w-md p-6">
+                <CardContent className="space-y-4">
+                    <h2 className="text-2xl font-semibold text-center">Login</h2>
+                    <Input
+                        placeholder="Email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                    />
+                    <Input
+                        placeholder="Password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <Button className="w-full mt-2" onClick={handleLogin} disabled={loading}>
+                        {loading ? 'Logging in ...' : 'Login'}
+                    </Button>
+                    <Button
+                        variant={"outline"}
+                        className="w-full"
+                        onClick={handleGuestLogin}
+                        disabled={loading}
+                    >
+                        {loading ? 'Logging in as Guest...' : 'Continue as Guest'}
+                    </Button>
+                </CardContent>
+            </Card>
+        </main>
+    )
+}
