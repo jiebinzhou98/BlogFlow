@@ -34,6 +34,7 @@ export default function RegisterPage() {
                 username: email.split('@')[0],
                 avatar_url: '',
                 bio: '',
+                is_guest: false
             })
         }
 
