@@ -22,6 +22,7 @@ interface Post {
     created_at: string
 }
 
+
 export default function DashboardPage() {
 
     const [profile, setProfile] = useState<Profile | null>(null)
@@ -31,41 +32,51 @@ export default function DashboardPage() {
     const router = useRouter()
 
     useEffect(() => {
-        const fetchUserProfile = async () =>{
+        const fetchUserProfile = async () => {
             const {
-                data: {user},
+                data: { user },
                 error: userError,
             } = await supabase.auth.getUser()
 
-            if(userError || !user){
+            if (userError || !user) {
                 router.push('/login')
                 return
             }
 
             setEmail(user.email!)
 
-            const {data, error} = await supabase
+            const { data: profileData, error: profileError } = await supabase
                 .from('profiles')
                 .select('*')
                 .eq('id', user.id)
                 .single()
 
-            if(error){
-                console.error('Failed to load profile: ', error.message)
-            }else{
-                setProfile(data)
+            if (profileError) {
+                console.error('Failed to load profile: ', profileError.message)
+            } else {
+                setProfile(profileData)
+            }
+
+            const { data: postsData, error: postError } = await supabase
+                .from('posts')
+                .select('*')
+                .eq('published', true)
+                .order('created_at', { ascending: false })
+
+            if (!postError && postsData) {
+                setPosts(postsData)
             }
             setLoading(false)
         }
         fetchUserProfile()
-    },[router])
+    }, [router])
 
-    if(loading) return <div className="p-4 text-center">Loading...</div>
+    if (loading) return <div className="p-4 text-center">Loading...</div>
 
     const isGuest = email === 'guest@demo.com' || profile?.is_guest === true
 
 
-    return(
+    return (
         <main className="max-w-7xl mx-auto px-4 py-12 space-y-10">
             <Card className="w-full max-w-3xl mx-auto p-6">
                 <CardContent className="space-y-4">
@@ -80,47 +91,47 @@ export default function DashboardPage() {
                         </div>
                     )}
                     <div className="flex flex-col gap-3 mt-4">
-                        {!isGuest &&(
+                        {!isGuest && (
                             <Button onClick={() => router.push('/create')}>➕ Create New Post</Button>
                         )}
                         <Button variant="outline" onClick={() => router.push('/')}>🏠Go to Home</Button>
                     </div>
-                    
+
                 </CardContent>
             </Card>
 
             <section>
                 <h3 className="text-2xl font-bold mb-6">Latest Posts</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {posts.map((post) => (
-                            <div
-                                key={post.id}
-                                className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition"
-                            >
-                                {post.cover_url &&(
-                                    <Image
-                                        src={post.cover_url}
-                                        alt={post.title}
-                                        width={500}
-                                        height={300}
-                                        className="w-full h-60 object-cover"
-                                    />
-                                )}
-                                <div className="p-4">
-                                    <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
-                                    <p className="text-sm text-gray-500 line-clamp-3">
-                                        {post.content.replace(/<[^>]+>/g, '').slice(0, 150)}...
-                                    </p>
-                                    <Button
-                                        variant="link"
-                                        className="mt-2 px-0"
-                                        onClick={() => router.push(`/post/${post.id}`)}
-                                    >
-                                        Read More →
-                                    </Button>
-                                </div>
+                    {posts.map((post) => (
+                        <div
+                            key={post.id}
+                            className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition"
+                        >
+                            {post.cover_url && (
+                                <Image
+                                    src={post.cover_url}
+                                    alt={post.title}
+                                    width={500}
+                                    height={300}
+                                    className="w-full h-60 object-cover"
+                                />
+                            )}
+                            <div className="p-4">
+                                <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
+                                <p className="text-sm text-gray-500 line-clamp-3">
+                                    {post.content.replace(/<[^>]+>/g, '').slice(0, 150)}...
+                                </p>
+                                <Button
+                                    variant="link"
+                                    className="mt-2 px-0"
+                                    onClick={() => router.push(`/post/${post.id}`)}
+                                >
+                                    Read More →
+                                </Button>
                             </div>
-                        ))}
+                        </div>
+                    ))}
                 </div>
             </section>
         </main>

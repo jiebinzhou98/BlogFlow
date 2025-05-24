@@ -120,3 +120,15 @@
     @apply bg-background text-foreground;
   }
 }
+
+.ProseMirror {
+  outline: none;
+  padding: 1rem;
+  min-height: 200px;
+  border: 1px solid #e5e7eb; 
+  border-radius: 0.5rem;
+}
+.prose p {
+  margin-top: 1rem;
+  line-height: 1.75;
+}
