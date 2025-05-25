@@ -30,6 +30,8 @@ export default function DashboardPage() {
     const [loading, setLoading] = useState(true)
     const [posts, setPosts] = useState<Post[]>([])
     const router = useRouter()
+    const [publishedPosts, setPublishedPosts] = useState<Post[]>([])
+    const [draftPosts, setDraftPosts] = useState<Post[]>([])
 
     useEffect(() => {
         const fetchUserProfile = async () => {
@@ -57,19 +59,43 @@ export default function DashboardPage() {
                 setProfile(profileData)
             }
 
-            const { data: postsData, error: postError } = await supabase
+            const {data: published, error: pubErr} = await supabase
                 .from('posts')
                 .select('*')
                 .eq('author_id', user.id)
-                .order('created_at', { ascending: false })
+                .eq('published', true)
+                .order('created_at', {ascending: false})
+            
+            if(published) setPublishedPosts(published)
 
-            if (!postError && postsData) {
-                setPosts(postsData)
-            }
+            const {data: drafts, error: draftErr} = await supabase
+                .from('posts')
+                .select('*')
+                .eq('author_id', user.id)
+                .is('published', false)
+                .order('created_at', {ascending: false})
+
+            if(drafts) setDraftPosts(drafts)
+
             setLoading(false)
         }
         fetchUserProfile()
     }, [router])
+
+    const handlePublish = async (postId: string) =>{
+        const {error} = await supabase
+            .from('posts')
+            .update({published: true})
+            .eq('id',postId)
+
+        if(error){
+            alert('❌ Failed to publish draft')
+            console.error(error)
+        }else{
+            alert('✅ Draft published!')
+            router.refresh()
+        }
+    }
 
     if (loading) return <div className="p-4 text-center">Loading...</div>
 
@@ -105,41 +131,91 @@ export default function DashboardPage() {
 
                 </CardContent>
             </Card>
-
+            
             <section>
-                <h3 className="text-2xl font-bold mb-6">Latest Posts</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {posts.map((post) => (
-                        <div
-                            key={post.id}
-                            className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition"
-                        >
-                            {post.cover_url && (
-                                <Image
-                                    src={post.cover_url}
-                                    alt={post.title}
-                                    width={500}
-                                    height={300}
-                                    className="w-full h-60 object-cover"
-                                />
-                            )}
-                            <div className="p-4">
-                                <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
-                                <p className="text-sm text-gray-500 line-clamp-3">
-                                    {post.content.replace(/<[^>]+>/g, '').slice(0, 150)}...
-                                </p>
-                                <Button
-                                    variant="link"
-                                    className="mt-2 px-0"
-                                    onClick={() => router.push(`/post/${post.id}`)}
-                                >
-                                    Read More →
-                                </Button>
+                <h3 className="text-2xl font-bold mb-6">📢 Published Posts</h3>
+                {publishedPosts.length === 0 ? (
+                    <p className="text-gray-500">No published posts yet</p>
+                ): (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        {publishedPosts.map((post) => (
+                            <div key={post.id} className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition">
+                                {post.cover_url && (
+                                    <Image
+                                        src={post.cover_url}
+                                        alt={post.title}
+                                        width={500}
+                                        height={300}
+                                        className="w-full h-60 object-cover"
+                                    />
+                                )}
+                                <div className="p-4 flex flex-col justify-between flex-grow">
+                                    <div>
+                                    <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
+                                    <p className="text-sm text-gray-500 line-clamp-3">
+                                        {post.content.replace(/<[^>]+>/g,'').slice(0, 150)}...
+                                    </p>
+                                    </div>
+
+                                    <div className="mt-4">
+                                    <Button
+                                        variant="secondary"
+                                        className="w-full"
+                                        onClick={() => router.push(`/post/${post.id}`)}
+                                    > 
+                                        Read More →
+                                    </Button>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                )}
             </section>
+
+            <section className="mt-12">
+                <h3 className="text-2xl font-bold mb-6">📝 Drafts</h3>
+                {draftPosts.length === 0 ? (
+                    <p className="text-gray-500">No drafts saved yet</p>
+                ): (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        {draftPosts.map((post) =>(
+                            <div key={post.id} className="bg-gray-100 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition">
+                                {post.cover_url &&(
+                                    <Image
+                                        src={post.cover_url}
+                                        alt={post.title}
+                                        width={500}
+                                        height={300}
+                                        className="w-full h-60 object-cover"
+                                    />
+                                )}
+                                <div className="p-4">
+                                    <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
+                                    <p className="text-sm text-gray-500 line-clamp-3">
+                                        {post.content.replace(/<[^>]+>/g,'').slice(0, 150)}...
+                                    </p>
+                                    <Button
+                                        variant="link"
+                                        className="mt-2 px-0"
+                                        onClick={() => router.push(`/post/${post.id}`)}
+                                    >
+                                        Edit Draft →
+                                    </Button>
+                                    <Button
+                                        variant={"secondary"}
+                                        className="mt-1"
+                                        onClick={() => handlePublish(post.id)}
+                                    >
+                                        📤 Publish
+                                    </Button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </section>
+            
         </main>
     )
 }

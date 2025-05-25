@@ -48,7 +48,7 @@ export default function CreatePostPage() {
     return publicUrl?.publicUrl || null
   }
 
-  const handleSubmit = async () => {
+  const handleSave = async (published: boolean) => {
     if (!title || !editor?.getHTML()) {
       alert('Please fill in title and content')
       return
@@ -69,7 +69,7 @@ export default function CreatePostPage() {
       title,
       content: editor.getHTML(),
       cover_url,
-      published: true,
+      published: !!published,
       author_id: userData.user.id,
     }
 
@@ -121,10 +121,15 @@ export default function CreatePostPage() {
           <EditorContent editor={editor} />
         </div>
       )}
-
-      <Button disabled={uploading} onClick={handleSubmit}>
+      <div className='flex gap-4'>
+      <Button disabled={uploading} onClick={() => handleSave(true)}>
         {uploading ? 'Publishing...' : 'Publish'}
       </Button>
+      <Button variant="outline" disabled={uploading} onClick={() => handleSave(false)}>
+        {uploading ? 'Saving...' : 'Save as Draft'}
+      </Button>
+      </div>
+
     </main>
   )
 }

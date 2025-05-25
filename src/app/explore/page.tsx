@@ -44,7 +44,7 @@ export default function ExplorePage() {
                 {posts.map((post) =>(
                     <div
                         key={post.id}
-                        className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition"
+                        className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition flex flex-col h-full"
                     >
                         {post.cover_url && (
                             <Image
@@ -55,18 +55,21 @@ export default function ExplorePage() {
                                 className="w-full h-60 object-cover"
                             />
                         )}
-                        <div className="p-4">
+                        <div className="p-4 flex flex-col justify-between flex-grow">
+                            <div>
                             <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
                             <p className="text-sm text-gray-500 line-clamp-3">
                                 {post.content.replace(/<[^>]+>/g, '').slice(0,150)}...
                             </p>
+                            </div>
+                            <div className="mt-4">
                             <Button
-                                value="link"
-                                className="mt-2 px-0"
+                                className="w-full"
                                 onClick={() => router.push(`/post/${post.id}`)}
                             >
                                 Read More →
                             </Button>
+                            </div>
                         </div>
                     </div>
                 ))}
