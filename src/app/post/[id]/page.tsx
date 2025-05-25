@@ -42,6 +42,24 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
   if (loading) return <div className="p-6 text-center">Loading post...</div>
   if (!post) return null
 
+  const handleDelete = async() =>{
+    const confirmed = confirm('Are you are you want to delete this post?')
+    if(!confirmed) return
+
+    const {error} = await supabase
+        .from('posts')
+        .delete()
+        .eq('id', post.id)
+    
+    if(error) {
+        alert('❌ Failed to delete post')
+        console.error(error)
+    }else{
+        alert('✅ Post deleted!')
+        router.push('/dashboard')
+    }
+  }
+
   return (
     <main className="max-w-3xl mx-auto p-6 space-y-6">
       {post.cover_url && (
@@ -56,9 +74,15 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
 
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">{post.title}</h1>
+        <div className='flex gap-2'>
         <Button onClick={() => router.push(`/post/${post.id}/edit`)}>
           ✏️ Edit
         </Button>
+        <Button variant="destructive" onClick={handleDelete}>
+            🗑️ Delete
+        </Button>
+        </div>
+
       </div>
 
       <p className="text-gray-500 text-sm">
