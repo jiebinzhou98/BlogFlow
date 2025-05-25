@@ -2,56 +2,115 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
-import { Button } from './ui/button'
 import { supabase } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Menu } from 'lucide-react'
 
 export default function Navbar() {
-    const [loggedIn, setLoggedIn] = useState(false)
-    const [isGuest, setIsGuest] = useState(false)
-    const pathname = usePathname()
-    const router = useRouter()
+  const [isOpen, setIsOpen] = useState(false)
+  const [username, setUsername] = useState('User')
+  const [email, setEmail] = useState('')
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const router = useRouter()
 
-    useEffect(() => {
-        const checkUser = async () => {
-            const {data: userData} = await supabase.auth.getUser()
-            const user = userData?.user
+  useEffect(() => {
+    const getUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
 
-            if(user) {
-                setLoggedIn(true)
-                setIsGuest(user.email?.startsWith('guest_') || false)
-            }else{
-                setLoggedIn(false)
-            }
-        }
-        checkUser()
-    }, [pathname])
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', user.id)
+          .single()
 
-    const handleLogout = async () =>{
-        await supabase.auth.signOut()
-        router.push('login')
+        setUsername(profile?.username || 'User')
+        setEmail(user.email || '')
+        setIsLoggedIn(true)
+      }
     }
+    getUser()
+  }, [])
 
-    return(
-        <nav className='bg-white shadow-md px-6 py-4 flex items-center justify-between'>
-            <div className='flex items-center gap-6 text-lg font-medium'>
-                <Link href="/">Home</Link>
-                <Link href="/explore">Explore</Link>
-                {loggedIn && <Link href="/dashboard">Dashboard</Link>}
-            </div>
-            <div>
-                {!loggedIn ? (
-                    <div className='flex gap-4'>
-                        <Button variant="ghost" onClick={() => router.push('/login')}>Login</Button>
-                        <Button onClick={() => router.push('.register')}>Register</Button>
-                    </div>
-                ): (
-                    <div className='flex items-center gap-4'>
-                        {isGuest && <span className='text-sm text-yellow-600'>Guest Mode</span>}
-                        <Button variant="outline" onClick={handleLogout}>Logout</Button>
-                    </div>
-                )}
-            </div>
-        </nav>
-    )
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push('/')
+  }
+
+  return (
+    <nav className="bg-white border-b px-6 py-4 flex items-center justify-between">
+      <div className="text-xl font-semibold">
+        <Link href="/">Blog Platform</Link>
+      </div>
+
+      <div className="hidden md:flex items-center gap-6">
+        <Link href="/explore">Explore</Link>
+        {isLoggedIn && <Link href="/dashboard">Dashboard</Link>}
+        {isLoggedIn && (
+          <div className="text-sm text-gray-500">{username} ({email})</div>
+        )}
+        {isLoggedIn ? (
+          <>
+            <Button onClick={() => router.push('/create')} size="sm">
+              ➕ Create
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleLogout}>
+              Logout
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button variant="outline" size="sm" onClick={() => router.push('/login')}>
+              Login
+            </Button>
+            <Button size="sm" onClick={() => router.push('/register')}>
+              Register
+            </Button>
+          </>
+        )}
+      </div>
+
+      <button
+        className="md:hidden"
+        onClick={() => setIsOpen((prev) => !prev)}
+        aria-label="Toggle Menu"
+      >
+        <Menu />
+      </button>
+
+      {isOpen && (
+        <div className="absolute top-16 left-0 right-0 bg-white shadow-md p-4 md:hidden z-50">
+          <div className="flex flex-col gap-4">
+            <Link href="/explore">Explore</Link>
+            {isLoggedIn && <Link href="/dashboard">Dashboard</Link>}
+            {isLoggedIn && (
+              <div className="text-sm text-gray-500">{username} ({email})</div>
+            )}
+            {isLoggedIn ? (
+              <>
+                <Button onClick={() => router.push('/create')} size="sm">
+                  ➕ Create
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleLogout}>
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" size="sm" onClick={() => router.push('/login')}>
+                  Login
+                </Button>
+                <Button size="sm" onClick={() => router.push('/register')}>
+                  Register
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </nav>
+  )
 }

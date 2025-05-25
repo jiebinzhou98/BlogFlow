@@ -59,39 +59,39 @@ export default function DashboardPage() {
                 setProfile(profileData)
             }
 
-            const {data: published, error: pubErr} = await supabase
+            const { data: published, error: pubErr } = await supabase
                 .from('posts')
                 .select('*')
                 .eq('author_id', user.id)
                 .eq('published', true)
-                .order('created_at', {ascending: false})
-            
-            if(published) setPublishedPosts(published)
+                .order('created_at', { ascending: false })
 
-            const {data: drafts, error: draftErr} = await supabase
+            if (published) setPublishedPosts(published)
+
+            const { data: drafts, error: draftErr } = await supabase
                 .from('posts')
                 .select('*')
                 .eq('author_id', user.id)
                 .is('published', false)
-                .order('created_at', {ascending: false})
+                .order('created_at', { ascending: false })
 
-            if(drafts) setDraftPosts(drafts)
+            if (drafts) setDraftPosts(drafts)
 
             setLoading(false)
         }
         fetchUserProfile()
     }, [router])
 
-    const handlePublish = async (postId: string) =>{
-        const {error} = await supabase
+    const handlePublish = async (postId: string) => {
+        const { error } = await supabase
             .from('posts')
-            .update({published: true})
-            .eq('id',postId)
+            .update({ published: true })
+            .eq('id', postId)
 
-        if(error){
+        if (error) {
             alert('❌ Failed to publish draft')
             console.error(error)
-        }else{
+        } else {
             alert('✅ Draft published!')
             router.refresh()
         }
@@ -104,39 +104,12 @@ export default function DashboardPage() {
 
     return (
         <main className="max-w-7xl mx-auto px-4 py-12 space-y-10">
-            <Card className="w-full max-w-3xl mx-auto p-6">
-                <CardContent className="space-y-4">
-                    <h2 className="text-2xl font-semibold text-center">
-                        Welcome, {profile?.username || 'User'}👋
-                    </h2>
-                    <p className="text-center text-gray-500">{email}</p>
 
-                    <div className="flex flex-col gap-3 mt-4">
-                        <Button onClick={() => router.push('/create')}>
-                            ➕ Create New Post
-                        </Button>
-
-                        <Button variant="outline" onClick={() => router.push('/')}>
-                            🏠Go to Home
-                        </Button>
-
-                        {isGuest && (
-                            <p className="text-yellow-600 text-center font-medium">
-                                ⚠️ You are in guest mode. Your posts may not be saved permanently.
-                            </p>
-                        )}
-                    </div>
-
-
-
-                </CardContent>
-            </Card>
-            
             <section>
-                <h3 className="text-2xl font-bold mb-6">📢 Published Posts</h3>
+                <h2 className="text-2xl font-bold mb-6">📢 Published Posts</h2>
                 {publishedPosts.length === 0 ? (
                     <p className="text-gray-500">No published posts yet</p>
-                ): (
+                ) : (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {publishedPosts.map((post) => (
                             <div key={post.id} className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition">
@@ -151,20 +124,20 @@ export default function DashboardPage() {
                                 )}
                                 <div className="p-4 flex flex-col justify-between flex-grow">
                                     <div>
-                                    <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
-                                    <p className="text-sm text-gray-500 line-clamp-3">
-                                        {post.content.replace(/<[^>]+>/g,'').slice(0, 150)}...
-                                    </p>
+                                        <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
+                                        <p className="text-sm text-gray-500 line-clamp-3">
+                                            {post.content.replace(/<[^>]+>/g, '').slice(0, 150)}...
+                                        </p>
                                     </div>
 
                                     <div className="mt-4">
-                                    <Button
-                                        variant="secondary"
-                                        className="w-full"
-                                        onClick={() => router.push(`/post/${post.id}`)}
-                                    > 
-                                        Read More →
-                                    </Button>
+                                        <Button
+                                            variant="secondary"
+                                            className="w-full"
+                                            onClick={() => router.push(`/post/${post.id}`)}
+                                        >
+                                            Read More →
+                                        </Button>
                                     </div>
                                 </div>
                             </div>
@@ -177,11 +150,11 @@ export default function DashboardPage() {
                 <h3 className="text-2xl font-bold mb-6">📝 Drafts</h3>
                 {draftPosts.length === 0 ? (
                     <p className="text-gray-500">No drafts saved yet</p>
-                ): (
+                ) : (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {draftPosts.map((post) =>(
+                        {draftPosts.map((post) => (
                             <div key={post.id} className="bg-gray-100 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition flex flex-col h-full">
-                                {post.cover_url &&(
+                                {post.cover_url && (
                                     <Image
                                         src={post.cover_url}
                                         alt={post.title}
@@ -192,26 +165,26 @@ export default function DashboardPage() {
                                 )}
                                 <div className="p-4 flex flex-col justify-between flex-grow">
                                     <div>
-                                    <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
-                                    <p className="text-sm text-gray-500 line-clamp-3">
-                                        {post.content.replace(/<[^>]+>/g,'').slice(0, 150)}...
-                                    </p>
+                                        <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
+                                        <p className="text-sm text-gray-500 line-clamp-3">
+                                            {post.content.replace(/<[^>]+>/g, '').slice(0, 150)}...
+                                        </p>
                                     </div>
                                     <div className="mt-4 flex flex-col gap-2">
-                                    <Button
-                                        variant="outline"
-                                        className="w-full"
-                                        onClick={() => router.push(`/post/${post.id}`)}
-                                    >
-                                        Edit Draft →
-                                    </Button>
-                                    <Button
-                                        variant="default"
-                                        className="w-full bg-green-500 hover:bg-green-600 text-white"
-                                        onClick={() => handlePublish(post.id)}
-                                    >
-                                        📤 Publish
-                                    </Button>
+                                        <Button
+                                            variant="outline"
+                                            className="w-full"
+                                            onClick={() => router.push(`/post/${post.id}`)}
+                                        >
+                                            Edit Draft →
+                                        </Button>
+                                        <Button
+                                            variant="default"
+                                            className="w-full bg-green-500 hover:bg-green-600 text-white"
+                                            onClick={() => handlePublish(post.id)}
+                                        >
+                                            📤 Publish
+                                        </Button>
                                     </div>
                                 </div>
                             </div>
@@ -219,7 +192,7 @@ export default function DashboardPage() {
                     </div>
                 )}
             </section>
-            
+
         </main>
     )
 }
