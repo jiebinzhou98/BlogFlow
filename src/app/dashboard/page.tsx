@@ -60,7 +60,7 @@ export default function DashboardPage() {
             const { data: postsData, error: postError } = await supabase
                 .from('posts')
                 .select('*')
-                .eq('published', true)
+                .eq('author_id', user.id)
                 .order('created_at', { ascending: false })
 
             if (!postError && postsData) {
@@ -85,17 +85,23 @@ export default function DashboardPage() {
                     </h2>
                     <p className="text-center text-gray-500">{email}</p>
 
-                    {isGuest && (
-                        <div className="text-yellow-600 text-center font-medium">
-                            You are logged in as guest. Some features are disabled.
-                        </div>
-                    )}
                     <div className="flex flex-col gap-3 mt-4">
-                        {!isGuest && (
-                            <Button onClick={() => router.push('/create')}>➕ Create New Post</Button>
+                        <Button onClick={() => router.push('/create')}>
+                            ➕ Create New Post
+                        </Button>
+
+                        <Button variant="outline" onClick={() => router.push('/')}>
+                            🏠Go to Home
+                        </Button>
+
+                        {isGuest && (
+                            <p className="text-yellow-600 text-center font-medium">
+                                ⚠️ You are in guest mode. Your posts may not be saved permanently.
+                            </p>
                         )}
-                        <Button variant="outline" onClick={() => router.push('/')}>🏠Go to Home</Button>
                     </div>
+
+
 
                 </CardContent>
             </Card>
