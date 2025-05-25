@@ -180,7 +180,7 @@ export default function DashboardPage() {
                 ): (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {draftPosts.map((post) =>(
-                            <div key={post.id} className="bg-gray-100 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition">
+                            <div key={post.id} className="bg-gray-100 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition flex flex-col h-full">
                                 {post.cover_url &&(
                                     <Image
                                         src={post.cover_url}
@@ -190,25 +190,29 @@ export default function DashboardPage() {
                                         className="w-full h-60 object-cover"
                                     />
                                 )}
-                                <div className="p-4">
+                                <div className="p-4 flex flex-col justify-between flex-grow">
+                                    <div>
                                     <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
                                     <p className="text-sm text-gray-500 line-clamp-3">
                                         {post.content.replace(/<[^>]+>/g,'').slice(0, 150)}...
                                     </p>
+                                    </div>
+                                    <div className="mt-4 flex flex-col gap-2">
                                     <Button
-                                        variant="link"
-                                        className="mt-2 px-0"
+                                        variant="outline"
+                                        className="w-full"
                                         onClick={() => router.push(`/post/${post.id}`)}
                                     >
                                         Edit Draft →
                                     </Button>
                                     <Button
-                                        variant={"secondary"}
-                                        className="mt-1"
+                                        variant="default"
+                                        className="w-full bg-green-500 hover:bg-green-600 text-white"
                                         onClick={() => handlePublish(post.id)}
                                     >
                                         📤 Publish
                                     </Button>
+                                    </div>
                                 </div>
                             </div>
                         ))}
