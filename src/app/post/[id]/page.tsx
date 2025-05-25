@@ -21,6 +21,7 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
     const [loading, setLoading] = useState(true)
     const [userId, setUserId] = useState<string | null>(null)
     const isAuthor = userId === post?.author_id
+    const [backPath, setBackPath] = useState('/explore')
 
     useEffect(() => {
         const fetchPostAndUser = async () => {
@@ -40,6 +41,14 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
             setUserId(userData?.user?.id || null)
 
             setLoading(false)
+
+            const checkUser = async ()=>{
+                const {data: userData} = await supabase.auth.getUser()
+                if(userData?.user){
+                    setBackPath('/dashboard')
+                }
+            }
+            checkUser()
         }
         fetchPostAndUser()
     }, [params.id, router])
@@ -101,7 +110,7 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
                 className="prose prose-lg max-w-none"
                 dangerouslySetInnerHTML={{ __html: post.content }}
             />
-            <Button variant={"outline"} onClick={() => router.push('/dashboard')}>🔙 Back</Button>
+            <Button variant={"outline"} onClick={() => router.push(backPath)}>🔙 Back</Button>
         </main>
     )
 }

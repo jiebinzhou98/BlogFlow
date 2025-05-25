@@ -16,6 +16,7 @@ export default function EditPostPage({params}: {params: {id : string}}){
     const [coverUrl, setCoverUrl] = useState('')
     const [coverFile, setCoverFile] = useState<File | null>(null)
     const [loading, setLoading] = useState(false)
+    const [backPath, setBackPath] = useState('/explore')
 
     const editor = useEditor({
         extensions: [StarterKit],
@@ -40,6 +41,14 @@ export default function EditPostPage({params}: {params: {id : string}}){
             setCoverUrl(data.cover_url)
             editor?.commands.setContent(data.content)
             setLoading(false)
+
+            const checkUser = async () =>{
+                const {data: userData} = await supabase.auth.getUser()
+                if(userData?.user){
+                    setBackPath('/dashboard')
+                }
+            }
+            checkUser()
         }
         if(editor)fetchPost()
     }, [editor, postId, router])
@@ -131,7 +140,7 @@ export default function EditPostPage({params}: {params: {id : string}}){
                     </div>
                 )}
                 <Button onClick={handleUpdate}>💾 Update Post</Button>
-                <Button variant="outline" onClick={() => router.push('/dashboard')}>🔙 Back</Button>
+                <Button variant="outline" onClick={() => router.push(backPath)}>🔙 Back</Button>
         </main>
     )
 }
