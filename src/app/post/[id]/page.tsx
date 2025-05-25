@@ -61,6 +61,19 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
         const confirmed = confirm('Are you are you want to delete this post?')
         if (!confirmed) return
 
+        const filePath = post.cover_url?.split('/').pop()
+
+        if(filePath){
+            const {error: storageError} = await supabase
+            .storage
+            .from('covers')
+            .remove([filePath])
+
+            if(storageError){
+                console.warn('⚠️ Failed to delete cover image:', storageError.message)
+            }
+        }
+
         const { error } = await supabase
             .from('posts')
             .delete()
