@@ -93,7 +93,12 @@ export default function DashboardPage() {
             console.error(error)
         } else {
             alert('✅ Draft published!')
-            router.refresh()
+
+            const publishedPost = draftPosts.find((post) => post.id === postId)
+            if(publishedPost){
+                setDraftPosts(draftPosts.filter((post) => post.id !== postId))
+                setPublishedPosts([publishedPost, ...publishedPosts])
+            }
         }
     }
 
