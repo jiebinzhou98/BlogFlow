@@ -30,15 +30,30 @@ export default function Navbar() {
         setUsername(profile?.username || 'User')
         setEmail(user.email || '')
         setIsLoggedIn(true)
+      }else{
+        setUsername('User')
+        setEmail('')
+        setIsLoggedIn(false)
       }
     }
     getUser()
+
+    const { data: listener } = supabase.auth.onAuthStateChange(() =>{
+        getUser()
+    })
+
+    return () =>{
+        listener?.subscription.unsubscribe()
+    }
   }, [])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
     router.push('/')
   }
+
+  const navLinkStyle =
+    'relative px-1 text-gray-700 after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-black after:transition-all after:duration-300 hover:after:w-full hover:text-black'
 
   return (
     <nav className="bg-white border-b px-6 py-4 flex items-center justify-between">
@@ -47,8 +62,8 @@ export default function Navbar() {
       </div>
 
       <div className="hidden md:flex items-center gap-6">
-        <Link href="/explore">Explore</Link>
-        {isLoggedIn && <Link href="/dashboard">Dashboard</Link>}
+        <Link href="/explore" className={navLinkStyle}>Explore</Link>
+        {isLoggedIn && <Link href="/dashboard" className={navLinkStyle}>Dashboard</Link>}
         {isLoggedIn && (
           <div className="text-sm text-gray-500">{username} ({email})</div>
         )}
@@ -84,8 +99,8 @@ export default function Navbar() {
       {isOpen && (
         <div className="absolute top-16 left-0 right-0 bg-white shadow-md p-4 md:hidden z-50">
           <div className="flex flex-col gap-4">
-            <Link href="/explore">Explore</Link>
-            {isLoggedIn && <Link href="/dashboard">Dashboard</Link>}
+            <Link href="/explore" className={navLinkStyle}>Explore</Link>
+            {isLoggedIn && <Link href="/dashboard" className={navLinkStyle}>Dashboard</Link>}
             {isLoggedIn && (
               <div className="text-sm text-gray-500">{username} ({email})</div>
             )}
