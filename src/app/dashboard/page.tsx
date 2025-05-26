@@ -131,7 +131,10 @@ export default function DashboardPage() {
                                     <div>
                                         <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
                                         <p className="text-sm text-gray-500 line-clamp-3">
-                                            {post.content.replace(/<[^>]+>/g, '').slice(0, 150)}...
+                                            {(() =>{
+                                                const plainText = post.content.replace(/<[^>]+>/g, '')
+                                                return plainText.length > 150 ? plainText.slice(1, 150 ) + '...' : plainText
+                                            })()}
                                         </p>
                                     </div>
 
