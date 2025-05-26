@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 
@@ -15,13 +15,16 @@ interface Post {
     author_id: string
 }
 
-export default function PostDetailPage({ params }: { params: { id: string } }) {
+export default function PostDetailPage() {
     const router = useRouter()
     const [post, setPost] = useState<Post | null>(null)
     const [loading, setLoading] = useState(true)
     const [userId, setUserId] = useState<string | null>(null)
     const isAuthor = userId === post?.author_id
     const [backPath, setBackPath] = useState('/explore')
+    const params = useParams()
+    const postId = params.id as string
+
 
     useEffect(() => {
         const fetchPostAndUser = async () => {
@@ -51,7 +54,7 @@ export default function PostDetailPage({ params }: { params: { id: string } }) {
             checkUser()
         }
         fetchPostAndUser()
-    }, [params.id, router])
+    }, [postId, router])
 
 
     if (loading) return <div className="p-6 text-center">Loading post...</div>

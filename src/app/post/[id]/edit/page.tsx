@@ -1,16 +1,17 @@
 'use client'
 
-import { use, useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import { useRouter, useParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { EditorContent, useEditor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 
-export default function EditPostPage({params}: {params: {id : string}}){
+export default function EditPostPage(){
     const router = useRouter()
-    const postId = params.id
+    const params = useParams()
+    const postId = params?.id as string
 
     const [title, setTitle] = useState('')
     const [coverUrl, setCoverUrl] = useState('')
