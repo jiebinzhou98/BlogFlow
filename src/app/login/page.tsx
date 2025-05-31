@@ -24,20 +24,6 @@ export default function LoginPage(){
         }setLoading(false)
     }
 
-    const handleGuestLogin = async () => {
-        setLoading(true)
-        const {error} = await supabase.auth.signInWithPassword({
-            email: 'guest@demo.com',
-            password: 'guest1234'
-        })
-
-        if(error){
-            alert(error.message)
-        }else{
-            router.push('/dashboard')
-        }setLoading(false)
-    }
-
     return(
         <main className="flex items-center justify-center min-h-screen">
             <Card className="w-full max-w-md p-6">
@@ -58,14 +44,7 @@ export default function LoginPage(){
                     <Button className="w-full mt-2" onClick={handleLogin} disabled={loading}>
                         {loading ? 'Logging in ...' : 'Login'}
                     </Button>
-                    <Button
-                        variant={"outline"}
-                        className="w-full"
-                        onClick={handleGuestLogin}
-                        disabled={loading}
-                    >
-                        {loading ? 'Logging in as Guest...' : 'Continue as Guest'}
-                    </Button>
+
                 </CardContent>
             </Card>
         </main>
