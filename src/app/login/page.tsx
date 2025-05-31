@@ -44,7 +44,13 @@ export default function LoginPage(){
                     <Button className="w-full mt-2" onClick={handleLogin} disabled={loading}>
                         {loading ? 'Logging in ...' : 'Login'}
                     </Button>
-
+                    
+                    <div className="text-center text-sm text-gray-600">
+                        Don't have an account?{" "}
+                        <button className="text-blue-600 hover:underline" onClick={() => router.push('/register')}>
+                            Register here
+                        </button>
+                    </div>
                 </CardContent>
             </Card>
         </main>

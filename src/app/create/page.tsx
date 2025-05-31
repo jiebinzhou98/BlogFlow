@@ -1,8 +1,3 @@
-// ✅ 修改目标：
-// 1. 未登录时允许填写内容
-// 2. 超时（如2分钟）自动提示登录（通过 Shadcn Dialog）
-// 3. 所有输入实时保存到 localStorage，并在页面加载时恢复
-
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -33,7 +28,6 @@ export default function CreatePostPage() {
         content: '',
     })
 
-    // ✅ 读取 localStorage 草稿
     useEffect(() => {
         const draft = localStorage.getItem('draft_post')
         if (draft) {
@@ -43,7 +37,6 @@ export default function CreatePostPage() {
         }
     }, [editor])
 
-    // ✅ 实时保存到 localStorage
     useEffect(() => {
         const interval = setInterval(() => {
             const draft = {
@@ -55,7 +48,6 @@ export default function CreatePostPage() {
         return () => clearInterval(interval)
     }, [title, editor])
 
-    // ✅ 启动未登录计时器提示登录（封装 hook）
     useLoginPromptTimer(() => {
         setShowLoginDialog(true)
     }, 60 * 1000)
