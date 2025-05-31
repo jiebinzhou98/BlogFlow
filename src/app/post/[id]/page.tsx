@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
+import { Star } from 'lucide-react'
 
 interface Post {
     id: string
@@ -20,59 +21,71 @@ export default function PostDetailPage() {
     const [post, setPost] = useState<Post | null>(null)
     const [loading, setLoading] = useState(true)
     const [userId, setUserId] = useState<string | null>(null)
-    const isAuthor = userId === post?.author_id
+    const [averageRating, setAverageRating] = useState<number | null>(null)
+    const [userRating, setUserRating] = useState<number | null>(null)
     const [backPath, setBackPath] = useState('/explore')
+    const [submitting, setSubmitting] = useState(false)
     const params = useParams()
     const postId = params.id as string
-
+    const isAuthor = userId === post?.author_id
 
     useEffect(() => {
-        const fetchPostAndUser = async () => {
-            const { data, error } = await supabase
+        const fetchPostAndRatings = async () => {
+            const { data: postData, error } = await supabase
                 .from('posts')
                 .select('*')
-                .eq('id', params.id)
+                .eq('id', postId)
                 .single()
 
-            if (error || !data) {
+            if (error || !postData) {
                 router.push('/dashboard')
             } else {
-                setPost(data)
+                setPost(postData)
             }
 
             const { data: userData } = await supabase.auth.getUser()
-            setUserId(userData?.user?.id || null)
+            const uid = userData?.user?.id || null
+            setUserId(uid)
+
+            if (uid) {
+                setBackPath('/dashboard')
+                const { data: userRatingData } = await supabase
+                    .from('ratings')
+                    .select('rating')
+                    .eq('user_id', uid)
+                    .eq('post_id', postId)
+                    .single()
+                setUserRating(userRatingData?.rating ?? null)
+            }
+
+            const { data: allRatings } = await supabase
+                .from('ratings')
+                .select('rating')
+                .eq('post_id', postId)
+
+            if (allRatings && allRatings.length > 0) {
+                const avg = allRatings.reduce((sum, r) => sum + r.rating, 0) / allRatings.length
+                setAverageRating(avg)
+            }
 
             setLoading(false)
-
-            const checkUser = async ()=>{
-                const {data: userData} = await supabase.auth.getUser()
-                if(userData?.user){
-                    setBackPath('/dashboard')
-                }
-            }
-            checkUser()
         }
-        fetchPostAndUser()
+        fetchPostAndRatings()
     }, [postId, router])
-
-
-    if (loading) return <div className="p-6 text-center">Loading post...</div>
-    if (!post) return null
 
     const handleDelete = async () => {
         const confirmed = confirm('Are you are you want to delete this post?')
         if (!confirmed) return
 
-        const filePath = post.cover_url?.split('/').pop()
+        const filePath = post?.cover_url?.split('/').pop()
 
-        if(filePath){
-            const {error: storageError} = await supabase
-            .storage
-            .from('covers')
-            .remove([filePath])
+        if (filePath) {
+            const { error: storageError } = await supabase
+                .storage
+                .from('covers')
+                .remove([filePath])
 
-            if(storageError){
+            if (storageError) {
                 console.warn('⚠️ Failed to delete cover image:', storageError.message)
             }
         }
@@ -80,7 +93,7 @@ export default function PostDetailPage() {
         const { error } = await supabase
             .from('posts')
             .delete()
-            .eq('id', post.id)
+            .eq('id', post?.id)
 
         if (error) {
             alert('❌ Failed to delete post')
@@ -90,6 +103,40 @@ export default function PostDetailPage() {
             router.push('/dashboard')
         }
     }
+
+    const submitRating = async (rating: number) => {
+        if (!userId || !postId) return
+        setSubmitting(true)
+
+        const { data: existing } = await supabase
+            .from('ratings')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('post_id', postId)
+            .single()
+
+        let error = null
+        if (existing) {
+            ;({ error } = await supabase
+                .from('ratings')
+                .update({ rating })
+                .eq('id', existing.id))
+        } else {
+            ;({ error } = await supabase.from('ratings').insert({ user_id: userId, post_id: postId, rating }))
+        }
+
+        if (error) {
+            alert('❌ Failed to submit rating')
+            console.error(error)
+        } else {
+            setUserRating(rating)
+            alert('✅ Rating submitted!')
+        }
+        setSubmitting(false)
+    }
+
+    if (loading) return <div className="p-6 text-center">Loading post...</div>
+    if (!post) return null
 
     return (
         <main className="max-w-3xl mx-auto p-6 space-y-6">
@@ -105,7 +152,7 @@ export default function PostDetailPage() {
 
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold">{post.title}</h1>
-                {isAuthor &&
+                {isAuthor && (
                     <div className='flex gap-2'>
                         <Button onClick={() => router.push(`/post/${post.id}/edit`)}>
                             ✏️ Edit
@@ -114,19 +161,43 @@ export default function PostDetailPage() {
                             🗑️ Delete
                         </Button>
                     </div>
-                }
-
+                )}
             </div>
 
             <p className="text-gray-500 text-sm">
                 {new Date(post.created_at).toLocaleString()}
             </p>
 
+            {averageRating && (
+                <p className="text-sm text-yellow-600">⭐ Average Rating: {averageRating.toFixed(1)} / 5</p>
+            )}
+
+            {userId && (
+                <div className="space-y-2">
+                    <p className="font-medium">Your Rating:</p>
+                    <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                                key={star}
+                                onClick={() => submitRating(star)}
+                                disabled={submitting}
+                                className={`text-yellow-500 hover:scale-110 transition-transform ${userRating && star <= userRating ? '' : 'opacity-40'}`}
+                            >
+                                <Star fill="currentColor" stroke="currentColor" className="w-6 h-6" />
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             <article
                 className="prose prose-lg max-w-none"
                 dangerouslySetInnerHTML={{ __html: post.content }}
             />
-            <Button variant={"outline"} onClick={() => router.push(backPath)}>🔙 Back</Button>
+
+            <Button variant="outline" onClick={() => router.push(backPath)}>
+                🔙 Back
+            </Button>
         </main>
     )
 }
