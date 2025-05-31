@@ -103,11 +103,11 @@ export default function CreatePostPage() {
         editor?.commands.setContent('')
     }
 
-    const handleBack = async () =>{
-        const {data} = await supabase.auth.getUser()
-        if(data?.user){
+    const handleBack = async () => {
+        const { data } = await supabase.auth.getUser()
+        if (data?.user) {
             router.push('/dashboard')
-        }else{
+        } else {
             router.push('/explore')
         }
     }
@@ -124,7 +124,6 @@ export default function CreatePostPage() {
                     🗑️ Clear Draft
                 </Button>
             </div>
-
 
             <Input
                 placeholder="Post title"
@@ -189,4 +188,4 @@ export default function CreatePostPage() {
             </Dialog>
         </main>
     )
-} 
+}
