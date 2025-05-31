@@ -117,12 +117,12 @@ export default function PostDetailPage() {
 
         let error = null
         if (existing) {
-            ;({ error } = await supabase
+            ; ({ error } = await supabase
                 .from('ratings')
                 .update({ rating })
                 .eq('id', existing.id))
         } else {
-            ;({ error } = await supabase.from('ratings').insert({ user_id: userId, post_id: postId, rating }))
+            ; ({ error } = await supabase.from('ratings').insert({ user_id: userId, post_id: postId, rating }))
         }
 
         if (error) {
@@ -141,13 +141,15 @@ export default function PostDetailPage() {
     return (
         <main className="max-w-3xl mx-auto p-6 space-y-6">
             {post.cover_url && (
-                <Image
-                    src={post.cover_url}
-                    alt={post.title}
-                    width={800}
-                    height={400}
-                    className="rounded-xl object-cover w-full"
-                />
+                <div className="max-w-2xl mx-auto rounded-xl overflow-hidden shadow">
+                    <Image
+                        src={post.cover_url}
+                        alt={post.title}
+                        width={800}
+                        height={400}
+                        className="w-full h-60 object-cover"
+                    />
+                </div>
             )}
 
             <div className="flex justify-between items-center">
