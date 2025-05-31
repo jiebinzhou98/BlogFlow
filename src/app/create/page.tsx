@@ -1,17 +1,30 @@
+// ✅ 修改目标：
+// 1. 未登录时允许填写内容
+// 2. 超时（如2分钟）自动提示登录（通过 Shadcn Dialog）
+// 3. 所有输入实时保存到 localStorage，并在页面加载时恢复
+
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
 
 export default function CreatePostPage() {
     const [title, setTitle] = useState('')
     const [coverFile, setCoverFile] = useState<File | null>(null)
     const [uploading, setUploading] = useState(false)
+    const [showLoginDialog, setShowLoginDialog] = useState(false)
     const router = useRouter()
 
     const editor = useEditor({
@@ -19,32 +32,47 @@ export default function CreatePostPage() {
         content: '',
     })
 
+    // ✅ 读取 localStorage 草稿
+    useEffect(() => {
+        const draft = localStorage.getItem('draft_post')
+        if (draft) {
+            const parsed = JSON.parse(draft)
+            setTitle(parsed.title || '')
+            editor?.commands.setContent(parsed.content || '')
+        }
+    }, [editor])
+
+    // ✅ 实时保存到 localStorage
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const draft = {
+                title,
+                content: editor?.getHTML() || ''
+            }
+            localStorage.setItem('draft_post', JSON.stringify(draft))
+        }, 1000)
+        return () => clearInterval(interval)
+    }, [title, editor])
+
+    // ✅ 计时器提示登录（使用 Dialog）
+    useEffect(() => {
+        const checkLoginTimer = async () => {
+            const { data } = await supabase.auth.getUser()
+            if (!data?.user) {
+                setTimeout(() => {
+                    setShowLoginDialog(true)
+                }, 30 * 1000)
+            }
+        }
+        checkLoginTimer()
+    }, [router])
+
     const handleUpload = async (): Promise<string | null> => {
-        if (!coverFile) {
-            console.warn('⚠️ No cover file selected')
-            return null
-        }
-
+        if (!coverFile) return null
         const fileName = `${Date.now()}-${coverFile.name}`
-        console.log('📤 Uploading:', fileName)
-
-        const { data, error: uploadError } = await supabase.storage
-            .from('covers')
-            .upload(fileName, coverFile)
-
-        if (uploadError) {
-            console.error('❌ Upload failed:', uploadError.message)
-            return null
-        }
-
-        console.log('✅ Upload success:', data)
-
-        const { data: publicUrl } = supabase.storage
-            .from('covers')
-            .getPublicUrl(fileName)
-
-        console.log('🌐 Public URL:', publicUrl?.publicUrl)
-
+        const { data, error } = await supabase.storage.from('covers').upload(fileName, coverFile)
+        if (error) return null
+        const { data: publicUrl } = supabase.storage.from('covers').getPublicUrl(fileName)
         return publicUrl?.publicUrl || null
     }
 
@@ -53,13 +81,12 @@ export default function CreatePostPage() {
             alert('Please fill in title and content')
             return
         }
-
         setUploading(true)
 
         const { data: userData, error: userError } = await supabase.auth.getUser()
         if (userError || !userData?.user) {
-            alert('Not logged in')
             setUploading(false)
+            setShowLoginDialog(true)
             return
         }
 
@@ -73,16 +100,13 @@ export default function CreatePostPage() {
             author_id: userData.user.id,
         }
 
-        console.log('📦 Insert data:', newPost)
-
         const { error: insertError } = await supabase.from('posts').insert(newPost)
-
         setUploading(false)
 
         if (insertError) {
             alert('Failed to create post')
-            console.error('❌ Insert failed:', insertError.message)
         } else {
+            localStorage.removeItem('draft_post')
             alert('✅ Post created successfully!')
             router.push('/dashboard')
         }
@@ -121,6 +145,7 @@ export default function CreatePostPage() {
                     <EditorContent editor={editor} />
                 </div>
             )}
+
             <div className='flex items-center justify-between'>
                 <div className='flex gap-4'>
                     <Button disabled={uploading} onClick={() => handleSave(true)}>
@@ -130,14 +155,25 @@ export default function CreatePostPage() {
                         {uploading ? 'Saving...' : 'Save as Draft'}
                     </Button>
                 </div>
-
                 <Button variant="outline" onClick={() => router.push('/dashboard')}>
                     🔙 Back
                 </Button>
             </div>
 
-
-
+            <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>⚠️ Login Required</DialogTitle>
+                        <DialogDescription>
+                            To continue creating this post, please login or register.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex justify-end gap-4">
+                        <Button variant="outline" onClick={() => router.push('/register')}>Register</Button>
+                        <Button onClick={() => router.push('/login')}>Login</Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </main>
     )
-}
+} 
