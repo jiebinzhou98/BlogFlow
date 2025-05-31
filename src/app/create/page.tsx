@@ -13,12 +13,13 @@ import { Button } from '@/components/ui/button'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
 } from '@/components/ui/dialog'
+import { useLoginPromptTimer } from '@/lib/hooks/useLoginPromptTimer'
 
 export default function CreatePostPage() {
     const [title, setTitle] = useState('')
@@ -54,18 +55,10 @@ export default function CreatePostPage() {
         return () => clearInterval(interval)
     }, [title, editor])
 
-    // ✅ 计时器提示登录（使用 Dialog）
-    useEffect(() => {
-        const checkLoginTimer = async () => {
-            const { data } = await supabase.auth.getUser()
-            if (!data?.user) {
-                setTimeout(() => {
-                    setShowLoginDialog(true)
-                }, 30 * 1000)
-            }
-        }
-        checkLoginTimer()
-    }, [router])
+    // ✅ 启动未登录计时器提示登录（封装 hook）
+    useLoginPromptTimer(() => {
+        setShowLoginDialog(true)
+    }, 60 * 1000)
 
     const handleUpload = async (): Promise<string | null> => {
         if (!coverFile) return null
@@ -112,9 +105,34 @@ export default function CreatePostPage() {
         }
     }
 
+    const handleClearDraft = () => {
+        localStorage.removeItem('draft_post')
+        setTitle('')
+        editor?.commands.setContent('')
+    }
+
+    const handleBack = async () =>{
+        const {data} = await supabase.auth.getUser()
+        if(data?.user){
+            router.push('/dashboard')
+        }else{
+            router.push('/explore')
+        }
+    }
+
     return (
         <main className="max-w-3xl mx-auto p-6 space-y-6">
-            <h1 className="text-2xl font-bold">📝 Create New Post</h1>
+            <div className="flex items-center justify-between">
+                <h1 className="text-2xl font-bold whitespace-nowrap">📝 Create New Post</h1>
+                <Button
+                    variant="ghost"
+                    className="text-sm text-red-500"
+                    onClick={handleClearDraft}
+                >
+                    🗑️ Clear Draft
+                </Button>
+            </div>
+
 
             <Input
                 placeholder="Post title"
@@ -155,7 +173,7 @@ export default function CreatePostPage() {
                         {uploading ? 'Saving...' : 'Save as Draft'}
                     </Button>
                 </div>
-                <Button variant="outline" onClick={() => router.push('/dashboard')}>
+                <Button variant="outline" onClick={handleBack}>
                     🔙 Back
                 </Button>
             </div>
@@ -163,12 +181,15 @@ export default function CreatePostPage() {
             <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>⚠️ Login Required</DialogTitle>
+                        <DialogTitle>🔐 Login to continue writing</DialogTitle>
                         <DialogDescription>
-                            To continue creating this post, please login or register.
+                            To publish this post, please login or register. Your draft will be saved and restored after login.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="flex justify-end gap-4">
+                    <div className="flex justify-end gap-2">
+                        <Button variant="secondary" onClick={() => setShowLoginDialog(false)}>
+                            Continue without login
+                        </Button>
                         <Button variant="outline" onClick={() => router.push('/register')}>Register</Button>
                         <Button onClick={() => router.push('/login')}>Login</Button>
                     </div>
