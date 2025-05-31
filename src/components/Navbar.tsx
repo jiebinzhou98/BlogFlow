@@ -30,7 +30,7 @@ export default function Navbar() {
         setUsername(profile?.username || 'User')
         setEmail(user.email || '')
         setIsLoggedIn(true)
-      }else{
+      } else {
         setUsername('User')
         setEmail('')
         setIsLoggedIn(false)
@@ -38,12 +38,12 @@ export default function Navbar() {
     }
     getUser()
 
-    const { data: listener } = supabase.auth.onAuthStateChange(() =>{
-        getUser()
+    const { data: listener } = supabase.auth.onAuthStateChange(() => {
+      getUser()
     })
 
-    return () =>{
-        listener?.subscription.unsubscribe()
+    return () => {
+      listener?.subscription.unsubscribe()
     }
   }, [])
 
@@ -58,7 +58,7 @@ export default function Navbar() {
   return (
     <nav className="bg-white border-b px-6 py-4 flex items-center justify-between">
       <div className="text-xl font-semibold">
-        <Link href="/">Blog Platform</Link>
+        <Link href="/">Foodie Picks</Link>
       </div>
 
       <div className="hidden md:flex items-center gap-6">
