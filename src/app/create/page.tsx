@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Input } from '@/components/ui/input'
@@ -15,13 +15,18 @@ import {
     DialogDescription,
 } from '@/components/ui/dialog'
 import { useLoginPromptTimer } from '@/lib/hooks/useLoginPromptTimer'
+import { Star } from 'lucide-react'
 
 export default function CreatePostPage() {
     const [title, setTitle] = useState('')
     const [coverFile, setCoverFile] = useState<File | null>(null)
     const [uploading, setUploading] = useState(false)
     const [showLoginDialog, setShowLoginDialog] = useState(false)
+    const [rating, setRating] = useState(0)
+    const [clearing, setClearing] = useState(false)
     const router = useRouter()
+
+    const fileInputRef = useRef<HTMLInputElement | null>(null)
 
     const editor = useEditor({
         extensions: [StarterKit],
@@ -41,7 +46,7 @@ export default function CreatePostPage() {
         const interval = setInterval(() => {
             const draft = {
                 title,
-                content: editor?.getHTML() || ''
+                content: editor?.getHTML() || '',
             }
             localStorage.setItem('draft_post', JSON.stringify(draft))
         }, 1000)
@@ -83,6 +88,7 @@ export default function CreatePostPage() {
             cover_url,
             published: !!published,
             author_id: userData.user.id,
+            initial_rating: rating,
         }
 
         const { error: insertError } = await supabase.from('posts').insert(newPost)
@@ -98,10 +104,25 @@ export default function CreatePostPage() {
     }
 
     const handleClearDraft = () => {
-        localStorage.removeItem('draft_post')
-        setTitle('')
-        editor?.commands.setContent('')
+        setClearing(true)
+
+        setTimeout(() => {
+            localStorage.removeItem('draft_post')
+            setTitle('')
+            setRating(0)
+            setCoverFile(null)
+            editor?.commands.setContent('')
+
+            if (fileInputRef.current) {
+                fileInputRef.current.value = ''
+            }
+
+            setClearing(false)
+            alert('🗑️ Draft cleared!')
+        }, 300)
     }
+
+
 
     const handleBack = async () => {
         const { data } = await supabase.auth.getUser()
@@ -113,49 +134,63 @@ export default function CreatePostPage() {
     }
 
     return (
-        <main className="max-w-3xl mx-auto p-6 space-y-6">
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold whitespace-nowrap">📝 Create New Post</h1>
-                <Button
-                    variant="ghost"
-                    className="text-sm text-red-500"
-                    onClick={handleClearDraft}
-                >
-                    🗑️ Clear Draft
+        <main className="max-w-5xl mx-auto p-6 bg-white rounded-2xl shadow-xl">
+            <div className="flex items-center justify-between mb-6">
+                <h1 className="text-2xl font-bold">📝 Add New Restaurant</h1>
+                <Button variant="ghost" className="text-sm text-red-500" onClick={handleClearDraft} disabled={clearing}>
+                    {clearing ? 'Clearing...' : '🗑️ Clear Draft'}
                 </Button>
             </div>
 
-            <Input
-                placeholder="Post title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-            />
+            <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                    <Input
+                        placeholder="Restaurant name"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                    />
 
-            <Input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                    if (e.target.files?.[0]) {
-                        setCoverFile(e.target.files[0])
-                    }
-                }}
-            />
+                    <div>
+                        <p className="text-sm font-medium text-gray-600 mb-1">✨ Initial Rating:</p>
+                        <div className="flex gap-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                                <button
+                                    key={star}
+                                    onClick={() => setRating(star)}
+                                    className={`text-yellow-500 hover:scale-110 transition-transform ${star <= rating ? '' : 'opacity-40'}`}
+                                >
+                                    <Star fill="currentColor" stroke="currentColor" className="w-5 h-5" />
+                                </button>
+                            ))}
+                        </div>
+                    </div>
 
-            {coverFile && (
-                <img
-                    src={URL.createObjectURL(coverFile)}
-                    alt="Preview"
-                    className="w-full max-h-64 object-cover rounded"
-                />
-            )}
+                    <Input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                            if (e.target.files?.[0]) {
+                                setCoverFile(e.target.files[0])
+                            }
+                        }}
+                    />
 
-            {editor && (
-                <div className="border rounded p-2 min-h-[200px]">
-                    <EditorContent editor={editor} />
+                    {coverFile && (
+                        <img
+                            src={URL.createObjectURL(coverFile)}
+                            alt="Preview"
+                            className="w-full h-40 object-cover rounded border"
+                        />
+                    )}
                 </div>
-            )}
 
-            <div className='flex items-center justify-between'>
+                <div className="border rounded p-2 min-h-[300px]">
+                    {editor && <EditorContent editor={editor} />}
+                </div>
+            </div>
+
+            <div className='flex items-center justify-between mt-6'>
                 <div className='flex gap-4'>
                     <Button disabled={uploading} onClick={() => handleSave(true)}>
                         {uploading ? 'Publishing...' : 'Publish'}
@@ -164,9 +199,7 @@ export default function CreatePostPage() {
                         {uploading ? 'Saving...' : 'Save as Draft'}
                     </Button>
                 </div>
-                <Button variant="outline" onClick={handleBack}>
-                    🔙 Back
-                </Button>
+                <Button variant="outline" onClick={handleBack}>🔙 Back</Button>
             </div>
 
             <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
