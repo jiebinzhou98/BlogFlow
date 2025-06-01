@@ -30,6 +30,8 @@ export default function CreatePostPage() {
     const fileInputRef = useRef<HTMLInputElement | null>(null)
     const [latitude, setLatitude] = useState<number | null>(null)
     const [longitude, setLongitude] = useState<number | null>(null)
+    const [address, setAddress] = useState('')
+    const [mapRestKey, setMapRestKey] = useState(0)
 
     const editor = useEditor({
         extensions: [StarterKit],
@@ -94,6 +96,7 @@ export default function CreatePostPage() {
             initial_rating: rating,
             latitude,
             longitude,
+            address,
         }
 
         const { error: insertError } = await supabase.from('posts').insert(newPost)
@@ -116,6 +119,10 @@ export default function CreatePostPage() {
             setTitle('')
             setRating(0)
             setCoverFile(null)
+            setLatitude(null)
+            setLongitude(null)
+            setAddress('')
+            setMapRestKey(prev => prev + 1)
             editor?.commands.setContent('')
 
             if (fileInputRef.current) {
@@ -127,8 +134,6 @@ export default function CreatePostPage() {
         }, 300)
     }
 
-
-
     const handleBack = async () => {
         const { data } = await supabase.auth.getUser()
         if (data?.user) {
@@ -139,15 +144,21 @@ export default function CreatePostPage() {
     }
 
     return (
-        <main className="max-w-5xl mx-auto p-6 bg-white rounded-2xl shadow-xl">
-            <div className="flex items-center justify-between mb-6">
+        <main className="max-w-5xl mx-auto p-6 bg-white rounded-2xl shadow-xl space-y-6">
+            <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold">📝 Add New Restaurant</h1>
-                <Button variant="ghost" className="text-sm text-red-500" onClick={handleClearDraft} disabled={clearing}>
+                <Button
+                    variant="ghost"
+                    className="text-sm text-red-500"
+                    onClick={handleClearDraft}
+                    disabled={clearing}
+                >
                     {clearing ? 'Clearing...' : '🗑️ Clear Draft'}
                 </Button>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
+                {/* LEFT: Info */}
                 <div className="space-y-4">
                     <Input
                         placeholder="Restaurant name"
@@ -171,13 +182,11 @@ export default function CreatePostPage() {
                     </div>
 
                     <Input
-                        ref={fileInputRef}
                         type="file"
+                        ref={fileInputRef}
                         accept="image/*"
                         onChange={(e) => {
-                            if (e.target.files?.[0]) {
-                                setCoverFile(e.target.files[0])
-                            }
+                            if (e.target.files?.[0]) setCoverFile(e.target.files[0])
                         }}
                     />
 
@@ -185,28 +194,28 @@ export default function CreatePostPage() {
                         <img
                             src={URL.createObjectURL(coverFile)}
                             alt="Preview"
-                            className="w-full h-40 object-cover rounded border"
+                            className="w-full h-36 object-cover rounded border"
                         />
                     )}
+
+                    <div>
+                        <MapSelector
+                            latitude={latitude}
+                            longitude={longitude}
+                            onLocationChange={(lat, lng, addr) => {
+                                setLatitude(lat)
+                                setLongitude(lng)
+                                setAddress(addr)
+                            }}
+                            resetKey={mapRestKey}
+                        />
+                    </div>
                 </div>
 
+                {/* RIGHT: Description */}
                 <div className="border rounded p-2 min-h-[300px]">
                     {editor && <EditorContent editor={editor} />}
                 </div>
-
-                <MapSelector
-                    latitude={latitude}
-                    longitude={longitude}
-                    onChange={(lat, lng) => {
-                        setLatitude(lat)
-                        setLongitude(lng)
-                    }}
-                />
-                {latitude && longitude && (
-                    <p className='text-sm text-muted-foreground mt-1'>
-                        Selected Location: ({latitude.toFixed(5)}, {longitude.toFixed(5)})
-                    </p>
-                )}
             </div>
 
             <div className='flex items-center justify-between mt-6'>
