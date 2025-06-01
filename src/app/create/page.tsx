@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dialog'
 import { useLoginPromptTimer } from '@/lib/hooks/useLoginPromptTimer'
 import { Star } from 'lucide-react'
+import MapSelector from '@/components/MapSelector'
 
 export default function CreatePostPage() {
     const [title, setTitle] = useState('')
@@ -27,6 +28,8 @@ export default function CreatePostPage() {
     const router = useRouter()
 
     const fileInputRef = useRef<HTMLInputElement | null>(null)
+    const [latitude, setLatitude] = useState<number | null>(null)
+    const [longitude, setLongitude] = useState<number | null>(null)
 
     const editor = useEditor({
         extensions: [StarterKit],
@@ -89,6 +92,8 @@ export default function CreatePostPage() {
             published: !!published,
             author_id: userData.user.id,
             initial_rating: rating,
+            latitude,
+            longitude,
         }
 
         const { error: insertError } = await supabase.from('posts').insert(newPost)
@@ -188,6 +193,20 @@ export default function CreatePostPage() {
                 <div className="border rounded p-2 min-h-[300px]">
                     {editor && <EditorContent editor={editor} />}
                 </div>
+
+                <MapSelector
+                    latitude={latitude}
+                    longitude={longitude}
+                    onChange={(lat, lng) => {
+                        setLatitude(lat)
+                        setLongitude(lng)
+                    }}
+                />
+                {latitude && longitude && (
+                    <p className='text-sm text-muted-foreground mt-1'>
+                        Selected Location: ({latitude.toFixed(5)}, {longitude.toFixed(5)})
+                    </p>
+                )}
             </div>
 
             <div className='flex items-center justify-between mt-6'>

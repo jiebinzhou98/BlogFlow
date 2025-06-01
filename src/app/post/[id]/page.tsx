@@ -6,6 +6,7 @@ import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Star } from 'lucide-react'
+import MapView from '@/components/MapView'
 
 interface Post {
     id: string
@@ -14,6 +15,8 @@ interface Post {
     cover_url: string
     created_at: string
     author_id: string
+    latitude: number
+    longitude: number
 }
 
 export default function PostDetailPage() {
@@ -190,6 +193,9 @@ export default function PostDetailPage() {
                         ))}
                     </div>
                 </div>
+            )}
+            {post.latitude && post.longitude && (
+                <MapView latitude={post.latitude} longitude={post.longitude} />
             )}
 
             <article

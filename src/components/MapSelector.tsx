@@ -1,47 +1,35 @@
-// components/MapSelector.tsx
 'use client'
 
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
-import { useState } from 'react'
-import L from 'leaflet'
+import { GoogleMap,Marker, useJsApiLoader } from "@react-google-maps/api"
 
-// ✅ 设置图标路径（放在 public/leaflet 文件夹）
-L.Icon.Default.mergeOptions({
-  iconUrl: '/leaflet/marker-icon.png',
-  shadowUrl: '/leaflet/marker-shadow.png',
-})
+interface MapSelectorProps {
+    latitude: number | null
+    longitude: number | null
+    onChange: (lat: number, lng: number) => void
+}
 
-export default function MapSelector({
-  onLocationChange,
-}: {
-  onLocationChange: (lat: number, lng: number) => void
-}) {
-  const [position, setPosition] = useState<[number, number] | null>(null)
-
-  const MapClickHandler = () => {
-    useMapEvents({
-      click(e) {
-        const { lat, lng } = e.latlng
-        setPosition([lat, lng])
-        onLocationChange(lat, lng)
-      },
+export default function MapSelector({ latitude, longitude, onChange }: MapSelectorProps) {
+    const { isLoaded } = useJsApiLoader({
+        googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
     })
-    return null
-  }
 
-  return (
-    <MapContainer
-      center={[43.6532, -79.3832]} // Toronto
-      zoom={13}
-      style={{ height: '300px', width: '100%' }}
-      className="rounded border"
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      <MapClickHandler />
-      {position && <Marker position={position} />}
-    </MapContainer>
-  )
+    if(!isLoaded) return <div>Loading map...</div>
+    
+    return (
+        <div className="w-full h-64 rounded-xl overflow-hidden">
+            <GoogleMap
+                center={{ lat: latitude ?? 43.6532, lng: longitude ?? -79.3832 }}
+                zoom={12}
+                mapContainerStyle={{width: '100%', height: '100%'}}
+                onClick={(e) => {
+                    onChange(e.latLng?.lat() ?? 0, e.latLng?.lng() ?? 0)
+                }}
+            >
+                {latitude && longitude && (
+                    <Marker position={{ lat: latitude, lng: longitude }} />
+                )}
+
+            </GoogleMap>
+        </div>
+    )
 }
