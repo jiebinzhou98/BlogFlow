@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
-import { Star } from 'lucide-react'
+import { Star, ChevronDown, ChevronUp, MapPin } from 'lucide-react'
 import MapView from '@/components/MapView'
 import { useJsApiLoader } from '@react-google-maps/api'
 
@@ -18,6 +18,8 @@ interface Post {
     author_id: string
     latitude: number
     longitude: number
+    address?: string
+    initial_rating: number
 }
 
 export default function PostDetailPage() {
@@ -32,6 +34,7 @@ export default function PostDetailPage() {
     const params = useParams()
     const postId = params.id as string
     const isAuthor = userId === post?.author_id
+    const [showMap, setShowMap] = useState(false)
 
     const { isLoaded } = useJsApiLoader({
         googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
@@ -75,7 +78,10 @@ export default function PostDetailPage() {
             if (allRatings && allRatings.length > 0) {
                 const avg = allRatings.reduce((sum, r) => sum + r.rating, 0) / allRatings.length
                 setAverageRating(avg)
+            } else if (postData.initial_rating > 0) {
+                setAverageRating(postData.initial_rating)
             }
+
 
             setLoading(false)
         }
@@ -179,30 +185,56 @@ export default function PostDetailPage() {
                 {new Date(post.created_at).toLocaleString()}
             </p>
 
-            {averageRating && (
-                <p className="text-sm text-yellow-600">⭐ Average Rating: {averageRating.toFixed(1)} / 5</p>
-            )}
+ {averageRating && (
+  <div className="flex items-center gap-1 text-yellow-600 text-sm">
+    {[1, 2, 3, 4, 5].map((i) => (
+      <Star
+        key={i}
+        className={`w-5 h-5 ${i <= Math.round(averageRating) ? 'text-yellow-500' : 'text-gray-300'}`}
+        fill={i <= Math.round(averageRating) ? 'currentColor' : 'none'}
+        stroke="currentColor"
+      />
+    ))}
+    <span className="text-gray-600 ml-1">({averageRating.toFixed(1)} / 5)</span>
+  </div>
+)}
 
-            {userId && (
-                <div className="space-y-2">
-                    <p className="font-medium">Your Rating:</p>
-                    <div className="flex gap-1">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                            <button
-                                key={star}
-                                onClick={() => submitRating(star)}
-                                disabled={submitting}
-                                className={`text-yellow-500 hover:scale-110 transition-transform ${userRating && star <= userRating ? '' : 'opacity-40'}`}
-                            >
-                                <Star fill="currentColor" stroke="currentColor" className="w-6 h-6" />
-                            </button>
-                        ))}
+
+   
+
+            {post.latitude && post.longitude && (
+                <div className="rounded-xl border bg-gray-50 p-4 space-y-3">
+                    {/* 地址行 */}
+                    <div className="flex items-start gap-2 text-sm text-gray-700">
+                        <MapPin className="w-5 h-5 text-red-500 mt-0.5" />
+                        <div>
+                            <p className="font-medium">Location:</p>
+                            <p className="text-gray-600">
+                                {post.address || `(${post.latitude.toFixed(5)}, ${post.longitude.toFixed(5)})`}
+                            </p>
+                        </div>
                     </div>
-                </div>
-            )}
 
-            {isLoaded && post.latitude && post.longitude && (
-                <MapView latitude={post.latitude} longitude={post.longitude} />
+                    {/* 显示/隐藏地图按钮 */}
+                    <button
+                        onClick={() => setShowMap((prev) => !prev)}
+                        className="flex items-center text-sm text-blue-600 hover:underline mt-1"
+                    >
+                        {showMap ? 'Hide Map' : 'Show on Map'}
+                        {showMap ? (
+                            <ChevronUp className="w-4 h-4 ml-1" />
+                        ) : (
+                            <ChevronDown className="w-4 h-4 ml-1" />
+                        )}
+                    </button>
+
+                    {/* 地图区域（可展开） */}
+                    {showMap && isLoaded && (
+                        <div className="w-full h-64 rounded-lg overflow-hidden shadow-sm border mt-2">
+                            <MapView latitude={post.latitude} longitude={post.longitude} />
+                        </div>
+                    )}
+                </div>
             )}
 
             <article
