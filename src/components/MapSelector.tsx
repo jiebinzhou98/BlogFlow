@@ -10,6 +10,7 @@ import {
 interface MapSelectorProps {
   latitude: number | null
   longitude: number | null
+  address: string
   onLocationChange: (lat: number, lng: number, address: string) => void
   resetKey?: number
 }

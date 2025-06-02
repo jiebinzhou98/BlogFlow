@@ -209,6 +209,7 @@ export default function CreatePostPage() {
           <MapSelector
             latitude={latitude}
             longitude={longitude}
+            address={address}
             onLocationChange={(lat, lng, addr) => {
               setLatitude(lat)
               setLongitude(lng)

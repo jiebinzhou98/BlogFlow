@@ -185,22 +185,19 @@ export default function PostDetailPage() {
                 {new Date(post.created_at).toLocaleString()}
             </p>
 
- {averageRating && (
-  <div className="flex items-center gap-1 text-yellow-600 text-sm">
-    {[1, 2, 3, 4, 5].map((i) => (
-      <Star
-        key={i}
-        className={`w-5 h-5 ${i <= Math.round(averageRating) ? 'text-yellow-500' : 'text-gray-300'}`}
-        fill={i <= Math.round(averageRating) ? 'currentColor' : 'none'}
-        stroke="currentColor"
-      />
-    ))}
-    <span className="text-gray-600 ml-1">({averageRating.toFixed(1)} / 5)</span>
-  </div>
-)}
-
-
-   
+            {averageRating && (
+                <div className="flex items-center gap-1 text-yellow-600 text-sm">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                        <Star
+                            key={i}
+                            className={`w-5 h-5 ${i <= Math.round(averageRating) ? 'text-yellow-500' : 'text-gray-300'}`}
+                            fill={i <= Math.round(averageRating) ? 'currentColor' : 'none'}
+                            stroke="currentColor"
+                        />
+                    ))}
+                    <span className="text-gray-600 ml-1">({averageRating.toFixed(1)} / 5)</span>
+                </div>
+            )}
 
             {post.latitude && post.longitude && (
                 <div className="rounded-xl border bg-gray-50 p-4 space-y-3">
