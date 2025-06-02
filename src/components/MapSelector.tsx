@@ -1,4 +1,3 @@
-'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import {
@@ -7,7 +6,6 @@ import {
   useJsApiLoader,
   StandaloneSearchBox
 } from '@react-google-maps/api'
-import { set } from 'react-hook-form'
 
 interface MapSelectorProps {
   latitude: number | null

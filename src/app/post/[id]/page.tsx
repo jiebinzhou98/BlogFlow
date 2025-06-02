@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Star } from 'lucide-react'
 import MapView from '@/components/MapView'
+import { useJsApiLoader } from '@react-google-maps/api'
 
 interface Post {
     id: string
@@ -31,6 +32,11 @@ export default function PostDetailPage() {
     const params = useParams()
     const postId = params.id as string
     const isAuthor = userId === post?.author_id
+
+    const { isLoaded } = useJsApiLoader({
+        googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
+        libraries: ['places'],
+    })
 
     useEffect(() => {
         const fetchPostAndRatings = async () => {
@@ -194,7 +200,8 @@ export default function PostDetailPage() {
                     </div>
                 </div>
             )}
-            {post.latitude && post.longitude && (
+
+            {isLoaded && post.latitude && post.longitude && (
                 <MapView latitude={post.latitude} longitude={post.longitude} />
             )}
 
