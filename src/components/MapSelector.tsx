@@ -1,4 +1,3 @@
-
 import { useState, useRef, useCallback, useEffect } from 'react'
 import {
   GoogleMap,
@@ -15,6 +14,9 @@ interface MapSelectorProps {
   resetKey?: number
 }
 
+// ✅ 修复警告：将 libraries 提到组件外
+const libraries: ("places")[] = ['places']
+
 const containerStyle = {
   width: '100%',
   height: '100%'
@@ -28,7 +30,7 @@ export default function MapSelector({
 }: MapSelectorProps) {
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
-    libraries: ['places']
+    libraries,
   })
 
   const [address, setAddress] = useState('')
@@ -69,7 +71,7 @@ export default function MapSelector({
     if (inputRef.current) {
       inputRef.current.value = ''
     }
-    setMapCenter({lat: latitude ?? 43.6532, lng: longitude ?? -79.3832})
+    setMapCenter({ lat: latitude ?? 43.6532, lng: longitude ?? -79.3832 })
   }, [resetKey])
 
   if (!isLoaded) return <div>Loading map...</div>
@@ -81,7 +83,7 @@ export default function MapSelector({
         onPlacesChanged={handlePlacesChanged}
       >
         <input
-          ref={inputRef} 
+          ref={inputRef}
           type="text"
           placeholder="Search a location..."
           className="w-full px-3 py-2 border rounded shadow-sm focus:outline-none"
