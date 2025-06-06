@@ -124,7 +124,7 @@
 .ProseMirror {
   outline: none;
   padding: 1rem;
-  min-height: 200px;
+  min-height: 70vh;
   border: 1px solid #e5e7eb; 
   border-radius: 0.5rem;
 }
