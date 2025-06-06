@@ -6,6 +6,8 @@ import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Menu } from 'lucide-react'
+import { set } from 'react-hook-form'
+import { User } from '@supabase/supabase-js'
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
@@ -13,6 +15,7 @@ export default function Navbar() {
   const [email, setEmail] = useState('')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const router = useRouter()
+  const [user, setUser] = useState<User | null>(null)
 
   useEffect(() => {
     const getUser = async () => {
@@ -49,6 +52,10 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
+    setUser(null)
+    setUsername('User')
+    setEmail('')
+    router.refresh?.()
     router.push('/')
   }
 

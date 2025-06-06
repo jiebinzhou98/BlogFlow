@@ -16,6 +16,18 @@ export default function RegisterPage() {
     const handleRegister = async () => {
         setLoading(true)
 
+        if (!email || !password) {
+            alert('Please enter both email and password')
+            setLoading(false)
+            return
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!emailRegex.test(email)) {
+            alert("Please enter a valid email address")
+            setLoading(false)
+            return
+        }
+
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
@@ -39,6 +51,7 @@ export default function RegisterPage() {
         }
 
         alert('Registeration successful! Please log in')
+        await supabase.auth.signOut(); // Automatically sign out after registration
         router.push('/login')
         setLoading(false)
     }
