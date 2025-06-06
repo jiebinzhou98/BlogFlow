@@ -5,9 +5,9 @@ import { Home, PlusCircle, User } from "lucide-react"
 
 //能跳转的页面
 const navItems = [
-    {name: 'Home', icon:<Home className="w-5 h-5"/>, href:'/dashboard'},
-    {name: 'Create', icon:<PlusCircle className="w-5 h-5"/>, href:'/create'},
-    {name: 'Profile', icon:<User className="w-5 h-5"/>, href:'/profile'}
+    { name: 'Explore', icon: <Home className="w-5 h-5" />, href: '/explore' },
+    { name: 'Create', icon: <PlusCircle className="w-5 h-5" />, href: '/create' },
+    { name: 'Profile', icon: <User className="w-5 h-5" />, href: '/' }
 ]
 
 export default function BottomNav() {
@@ -21,11 +21,13 @@ export default function BottomNav() {
                 <button
                     key={item.name}
                     onClick={() => router.push(item.href)}
-                    className={`flex flex-col items-center justify-center text-sm ${pathname === item.href ? 'text-black font-semibold' : 'text-gray-500'}`}
+                    aria-label={item.name}
+                    className={`flex flex-col items-center justify-center text-sm focus:outline-none ${pathname === item.href ? 'text-black font-semibold' : 'text-gray-500'}`}
                 >
                     {item.icon}
                     <span className="text-xs">{item.name}</span>
                 </button>
+
             ))}
         </nav>
     )
